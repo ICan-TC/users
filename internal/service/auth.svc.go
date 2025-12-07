@@ -36,7 +36,7 @@ func (s *AuthService) Signup(ctx context.Context, email, username, password stri
 	if err != nil {
 		return nil, nil, err
 	}
-	t, err := s.tsvc.TokensPair(ctx, u.ID, u.Username, u.Email)
+	t, err := s.tsvc.TokensPair(ctx, u.UserID, u.Username, u.Email)
 	if err != nil {
 		s.log.Err(err).Msg("could not create tokens")
 		return nil, nil, err
@@ -55,7 +55,7 @@ func (s *AuthService) Login(ctx context.Context, username, password string) (*mo
 	if err := bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password)); err != nil {
 		return nil, nil, huma.Error401Unauthorized("invalid credentials")
 	}
-	t, err := s.tsvc.TokensPair(ctx, u.ID, u.Username, u.Email)
+	t, err := s.tsvc.TokensPair(ctx, u.UserID, u.Username, u.Email)
 	if err != nil {
 		s.log.Err(err).Msg("could not create tokens")
 		return nil, nil, huma.Error500InternalServerError(err.Error())

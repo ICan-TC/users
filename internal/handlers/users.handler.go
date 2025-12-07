@@ -7,6 +7,7 @@ import (
 	"github.com/ICan-TC/lib/logging"
 	"github.com/ICan-TC/users/internal/dto"
 	"github.com/ICan-TC/users/internal/middleware"
+	"github.com/ICan-TC/users/internal/models"
 	"github.com/ICan-TC/users/internal/service"
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/rs/zerolog"
@@ -46,7 +47,7 @@ func RegisterUsersRoutes(api huma.API, svc *service.UsersService) {
 	huma.Register(g, huma.Operation{
 		OperationID:   "get-user-by-field",
 		Method:        http.MethodGet,
-		Path:          "",
+		Path:          "/{field}/{value}",
 		Summary:       "Get a user by field",
 		Description:   "Get a user by field",
 		DefaultStatus: http.StatusOK,
@@ -82,28 +83,76 @@ func RegisterUsersRoutes(api huma.API, svc *service.UsersService) {
 }
 
 func (h *UsersHandler) CreateUser(c context.Context, input *dto.CreateUserReq) (*dto.CreateUserRes, error) {
-	user, err := h.svc.CreateUser(c, input.Body.Username, input.Body.Email, input.Body.Password)
+	user, err := h.svc.CreateUser(c, input.Body.Email, input.Body.Username, input.Body.Password)
 	if err != nil {
 		return nil, huma.Error500InternalServerError(err.Error())
 	}
-	h.log.Info().Str("username", input.Body.Username).Str("email", input.Body.Email).Str("id", user.ID).Any("created", user.CreatedAt).
+	h.log.Info().Str("username", input.Body.Username).Str("email", input.Body.Email).Str("id", user.UserID).Any("created", user.CreatedAt).
 		Msg("Created user")
 	return &dto.CreateUserRes{
 		Body: dto.CreateUserResBody{
-			ID: user.ID, Username: user.Username, Email: user.Email, CreatedAt: int(user.CreatedAt.Unix()), UpdatedAt: int(user.CreatedAt.Unix()),
+			ID: user.UserID, Username: user.Username, Email: user.Email, CreatedAt: int(user.CreatedAt.Unix()), UpdatedAt: int(user.CreatedAt.Unix()),
 		},
 	}, nil
 }
 
 func (h *UsersHandler) UpdateUser(c context.Context, input *dto.UpdateUserReq) (*dto.UpdateUserRes, error) {
-	return nil, huma.Error501NotImplemented("not implemented")
+	m := models.Users{UserID: input.Body.Id}
+	if input.Body.Username != nil {
+		m.Username = *input.Body.Username
+	}
+	if input.Body.Email != nil {
+		m.Email = *input.Body.Email
+	}
+	if input.Body.Password != nil {
+		m.PasswordHash = *input.Body.Password
+	}
+	if input.Body.FirstName != nil {
+		m.FirstName = input.Body.FirstName
+	}
+	if input.Body.FamilyName != nil {
+		m.FamilyName = input.Body.FamilyName
+	}
+	if input.Body.PhoneNumber != nil {
+		m.PhoneNumber = input.Body.PhoneNumber
+	}
+	if input.Body.DateOfBirth != nil {
+		m.DateOfBirth = input.Body.DateOfBirth
+	}
+	user, err := h.svc.UpdateUser(c, m)
+	if err != nil {
+		return nil, err
+	}
+	return &dto.UpdateUserRes{
+		Body: dto.UpdateUserResBody{
+			ID:          user.UserID,
+			Username:    user.Username,
+			Email:       user.Email,
+			FirstName:   user.FirstName,
+			FamilyName:  user.FamilyName,
+			PhoneNumber: user.PhoneNumber,
+			DateOfBirth: user.DateOfBirth,
+			CreatedAt:   int(user.CreatedAt.Unix()),
+			UpdatedAt:   int(user.UpdatedAt.Unix()),
+		},
+	}, nil
 }
 
 func (h *UsersHandler) GetUserByField(c context.Context, input *dto.GetUserByFieldReq) (*dto.GetUserByFieldRes, error) {
-	return nil, huma.Error501NotImplemented("not implemented")
+	a, err := h.svc.GetUserByField(c, input.Field, input.Value)
+	if err != nil {
+		return nil, err
+	}
+	return &dto.GetUserByFieldRes{
+		Body: dto.GetUserResBody{
+			ID:       a.UserID,
+			Username: a.Username,
+			Email:    a.Email,
+		},
+	}, nil
 }
 func (h *UsersHandler) GetUserByID(c context.Context, input *dto.GetUserByIDReq) (*dto.GetUserByIDRes, error) {
-	user, err := h.svc.GetUser(c, input.ID)
+	user, err := h.svc.GetUserByID(c, input.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -111,13 +160,20 @@ func (h *UsersHandler) GetUserByID(c context.Context, input *dto.GetUserByIDReq)
 		Msg("Get user by ID")
 	return &dto.GetUserByIDRes{
 		Body: dto.GetUserResBody{
-			ID: user.ID, Username: user.Username, Email: user.Email, CreatedAt: int(user.CreatedAt.Unix()), UpdatedAt: int(user.CreatedAt.Unix()),
+			ID: user.UserID, Username: user.Username, Email: user.Email, CreatedAt: int(user.CreatedAt.Unix()), UpdatedAt: int(user.CreatedAt.Unix()),
 		},
 	}, nil
 }
 func (h *UsersHandler) DeleteUser(c context.Context, input *dto.DeleteUserReq) (*dto.DeleteUserRes, error) {
-	return nil, huma.Error501NotImplemented("not implemented")
+	if err := h.svc.DeleteUser(c, input.ID); err != nil {
+		return nil, err
+	}
+	return &dto.DeleteUserRes{
+		Body: dto.DeleteUserResBody{
+			ID: input.ID,
+		},
+	}, nil
 }
 func (h *UsersHandler) ListUsers(c context.Context, input *dto.ListUsersReq) (*dto.ListUsersRes, error) {
-	return nil, huma.Error501NotImplemented("not implemented")
+	return h.svc.GetUsers(c, input)
 }
