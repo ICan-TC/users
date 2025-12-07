@@ -6,6 +6,7 @@ import (
 
 	"github.com/ICan-TC/lib/logging"
 	"github.com/ICan-TC/users/internal/dto"
+	"github.com/ICan-TC/users/internal/middleware"
 	"github.com/ICan-TC/users/internal/service"
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/rs/zerolog"
@@ -22,6 +23,7 @@ func RegisterUsersRoutes(api huma.API, svc *service.UsersService) {
 	g.UseSimpleModifier(func(op *huma.Operation) {
 		op.Tags = []string{"Users"}
 	})
+	g.UseMiddleware(middleware.AuthMiddleware)
 
 	huma.Register(g, huma.Operation{
 		OperationID:   "create-user",
