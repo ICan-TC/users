@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/ICan-TC/lib/logging"
 	"github.com/ICan-TC/users/internal/dto"
 	"github.com/ICan-TC/users/internal/service"
 	"github.com/danielgtaylor/huma/v2"
@@ -16,7 +17,7 @@ type UsersHandler struct {
 }
 
 func RegisterUsersRoutes(api huma.API, svc *service.UsersService) {
-	h := &UsersHandler{svc: svc}
+	h := &UsersHandler{svc: svc, log: logging.L()}
 	g := huma.NewGroup(api, "/users")
 	g.UseSimpleModifier(func(op *huma.Operation) {
 		op.Tags = []string{"Users"}
@@ -79,7 +80,17 @@ func RegisterUsersRoutes(api huma.API, svc *service.UsersService) {
 }
 
 func (h *UsersHandler) CreateUser(c context.Context, input *dto.CreateUserReq) (*dto.CreateUserRes, error) {
-	return nil, huma.Error501NotImplemented("not implemented")
+	user, err := h.svc.CreateUser(c, input.Body.Username, input.Body.Email, input.Body.Password)
+	if err != nil {
+		return nil, huma.Error500InternalServerError(err.Error())
+	}
+	h.log.Info().Str("username", input.Body.Username).Str("email", input.Body.Email).Str("id", user.ID).Any("created", user.CreatedAt).
+		Msg("Created user")
+	return &dto.CreateUserRes{
+		Body: dto.CreateUserResBody{
+			ID: user.ID, Username: user.Username, Email: user.Email, CreatedAt: int(user.CreatedAt.Unix()), UpdatedAt: int(user.CreatedAt.Unix()),
+		},
+	}, nil
 }
 
 func (h *UsersHandler) UpdateUser(c context.Context, input *dto.UpdateUserReq) (*dto.UpdateUserRes, error) {
@@ -90,7 +101,17 @@ func (h *UsersHandler) GetUserByField(c context.Context, input *dto.GetUserByFie
 	return nil, huma.Error501NotImplemented("not implemented")
 }
 func (h *UsersHandler) GetUserByID(c context.Context, input *dto.GetUserByIDReq) (*dto.GetUserByIDRes, error) {
-	return nil, huma.Error501NotImplemented("not implemented")
+	user, err := h.svc.GetUser(c, input.ID)
+	if err != nil {
+		return nil, err
+	}
+	h.log.Info().Str("id", input.ID).Str("username", user.Username).Str("email", user.Email).Any("created", user.CreatedAt).
+		Msg("Get user by ID")
+	return &dto.GetUserByIDRes{
+		Body: dto.GetUserResBody{
+			ID: user.ID, Username: user.Username, Email: user.Email, CreatedAt: int(user.CreatedAt.Unix()), UpdatedAt: int(user.CreatedAt.Unix()),
+		},
+	}, nil
 }
 func (h *UsersHandler) DeleteUser(c context.Context, input *dto.DeleteUserReq) (*dto.DeleteUserRes, error) {
 	return nil, huma.Error501NotImplemented("not implemented")

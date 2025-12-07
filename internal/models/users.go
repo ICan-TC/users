@@ -12,6 +12,6 @@ type Users struct {
 	Username      string    `bun:"username"`
 	Email         string    `bun:"email"`
 	PasswordHash  string    `bun:"password_hash"`
-	CreatedAt     time.Time `bun:"created_at"`
-	UpdatedAt     time.Time `bun:"updated_at"`
+	CreatedAt     time.Time `bun:"created_at,default:current_timestamp"`
+	UpdatedAt     time.Time `bun:"updated_at,default:current_timestamp"`
 }

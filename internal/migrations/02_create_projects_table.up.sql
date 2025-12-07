@@ -8,8 +8,8 @@ CREATE TABLE IF NOT EXISTS projects (
 
   organization_id TEXT NOT NULL REFERENCES organizations(id),
 
-  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   created_by TEXT NOT NULL DEFAULT 'system'
 );
 

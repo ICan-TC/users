@@ -17,6 +17,7 @@ import (
 
 	"github.com/ICan-TC/lib/db"
 	"github.com/ICan-TC/lib/logging"
+	"github.com/ICan-TC/lib/tokens"
 	"github.com/ICan-TC/users/cmd"
 	"github.com/ICan-TC/users/internal/config"
 	"github.com/ICan-TC/users/internal/handlers"
@@ -126,14 +127,25 @@ func main() {
 		websiteSvc := service.NewWebsiteService(dbconn)
 		handlers.RegisterWebsiteRoutes(api, websiteSvc)
 
-		usersSvc, err := service.NewUsersService()
+		usersSvc, err := service.NewUsersService(dbconn)
 		if err != nil {
 			l.Err(err).Msg("Skipping Users Service")
 		} else {
 			handlers.RegisterUsersRoutes(api, usersSvc)
 		}
 
-		authSvc, err := service.NewAuthService()
+		tokenProvider, err := tokens.NewTokenProvider(tokens.TokenProviderArgs{
+			Secret:          cfg.Auth.Secret,
+			AccessTokenTTL:  cfg.Auth.AccessTokenTTL,
+			RefreshTokenTTL: cfg.Auth.RefreshTokenTTL,
+		})
+		if err != nil {
+			l.Err(err).Msg("Failed to create token provider, this is a critical module, exiting")
+			os.Exit(1)
+		}
+
+		tokensSvc := service.NewTokensService(tokenProvider, dbconn)
+		authSvc, err := service.NewAuthService(usersSvc, tokensSvc)
 		if err != nil {
 			l.Err(err).Msg("Skipping Auth Service")
 		} else {

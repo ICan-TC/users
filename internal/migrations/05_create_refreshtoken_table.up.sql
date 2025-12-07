@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS refresh_tokens (
 	user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 	token TEXT NOT NULL,
 	device TEXT NOT NULL,
-	expires_at TIMESTAMP NOT NULL,
-	created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-	revoked_at TIMESTAMP
+	expires_at TIMESTAMPTZ NOT NULL,
+	created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+	revoked_at TIMESTAMPTZ
 );

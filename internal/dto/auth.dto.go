@@ -1,10 +1,18 @@
 package dto
 
-type Tokens struct {
-	AccessToken           string `json:"access_token" doc:"The access token"`
-	AccessTokenExpiresAt  uint   `json:"access_token_expires_at" doc:"The access token expiration time in unix time (seconds)"`
+import "github.com/ICan-TC/lib/tokens"
+
+type AccessAndExp struct {
+	AccessToken          string `json:"access_token" doc:"The access token"`
+	AccessTokenExpiresAt uint   `json:"access_token_expires_at" doc:"The access token expiration time in unix time (seconds)"`
+}
+type RefreshAndExp struct {
 	RefreshToken          string `json:"refresh_token" doc:"The refresh token"`
 	RefreshTokenExpiresAt uint   `json:"refresh_token_expires_at" doc:"The refresh token expiration time in unix time (seconds)"`
+}
+type Tokens struct {
+	AccessAndExp
+	RefreshAndExp
 }
 
 type LoginReq struct {
@@ -29,9 +37,11 @@ type RefreshReq struct {
 		RefreshToken string `json:"refresh_token" doc:"Refresh token of the user" required:"true"`
 	}
 }
-type RefreshRes struct{ Body Tokens }
+type RefreshRes struct{ Body AccessAndExp }
 
-type LogoutReq struct{}
+type LogoutReq struct {
+	Authorization string `header:"Authorization" doc:"Bearer Token of the user" required:"true"`
+}
 type LogoutRes struct{ Body struct{} }
 
 type VerifyReq struct {
@@ -39,4 +49,4 @@ type VerifyReq struct {
 		Token string `json:"token" doc:"Token to verify" required:"true"`
 	}
 }
-type VerifyRes struct{ Body struct{} }
+type VerifyRes struct{ Body *tokens.UserClaims }

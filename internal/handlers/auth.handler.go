@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/ICan-TC/users/internal/dto"
 	"github.com/ICan-TC/users/internal/service"
@@ -57,18 +58,87 @@ func RegisterAuthRoutes(api huma.API, svc *service.AuthService) {
 		Description:   "Logout and revoke your Tokens",
 		DefaultStatus: http.StatusOK,
 	}, h.Logout)
+
+	huma.Register(g, huma.Operation{
+		OperationID:   "verify",
+		Method:        http.MethodPost,
+		Path:          "/verify",
+		Summary:       "Verify",
+		Description:   "Verify a Token",
+		DefaultStatus: http.StatusOK,
+	}, h.Verify)
 }
 
 func (h *AuthHandler) Login(c context.Context, input *dto.LoginReq) (*dto.LoginRes, error) {
-	return nil, huma.Error501NotImplemented("not implemented")
+	_, t, err := h.svc.Login(c, *input.Body.Username, input.Body.Password)
+	if err != nil {
+		return nil, err
+	}
+	return &dto.LoginRes{
+		Body: dto.Tokens{
+			AccessAndExp: dto.AccessAndExp{
+				AccessToken:          t.AccessToken.String(),
+				AccessTokenExpiresAt: uint(t.AccessExp.Unix()),
+			},
+			RefreshAndExp: dto.RefreshAndExp{
+				RefreshToken:          t.RefreshToken.String(),
+				RefreshTokenExpiresAt: uint(t.RefreshExp.Unix()),
+			},
+		},
+	}, nil
 }
+
 func (h *AuthHandler) Signup(c context.Context, input *dto.SignupReq) (*dto.SignupRes, error) {
-	return nil, huma.Error501NotImplemented("not implemented")
+	_, t, err := h.svc.Signup(c, input.Body.Email, input.Body.Username, input.Body.Password)
+	if err != nil {
+		return nil, err
+	}
+	return &dto.SignupRes{
+		Body: dto.Tokens{
+			AccessAndExp: dto.AccessAndExp{
+				AccessToken:          t.AccessToken.String(),
+				AccessTokenExpiresAt: uint(t.AccessExp.Unix()),
+			},
+			RefreshAndExp: dto.RefreshAndExp{
+				RefreshToken:          t.RefreshToken.String(),
+				RefreshTokenExpiresAt: uint(t.RefreshExp.Unix()),
+			},
+		},
+	}, nil
 }
 
 func (h *AuthHandler) Refresh(c context.Context, input *dto.RefreshReq) (*dto.RefreshRes, error) {
-	return nil, huma.Error501NotImplemented("not implemented")
+	token, exp, err := h.svc.Refresh(c, input.Body.RefreshToken)
+	if err != nil {
+		return nil, err
+	}
+	return &dto.RefreshRes{
+		Body: dto.AccessAndExp{
+			AccessToken:          token,
+			AccessTokenExpiresAt: exp,
+		},
+	}, nil
 }
 func (h *AuthHandler) Logout(c context.Context, input *dto.LogoutReq) (*dto.LogoutRes, error) {
-	return nil, huma.Error501NotImplemented("not implemented")
+	if input.Authorization == "" {
+		return &dto.LogoutRes{Body: struct{}{}}, huma.NewError(http.StatusBadRequest, "Authorization header is required")
+	}
+	sp := strings.Split(input.Authorization, " ")
+	if len(sp) != 2 {
+		return &dto.LogoutRes{Body: struct{}{}}, huma.NewError(http.StatusBadRequest, "Authorization header is invalid")
+	}
+	if sp[0] != "Bearer" {
+		return &dto.LogoutRes{Body: struct{}{}}, huma.NewError(http.StatusBadRequest, "Authorization header is invalid")
+	}
+	token := sp[1]
+	err := h.svc.Logout(c, token)
+	return &dto.LogoutRes{Body: struct{}{}}, err
+}
+
+func (h *AuthHandler) Verify(c context.Context, input *dto.VerifyReq) (*dto.VerifyRes, error) {
+	claims, err := h.svc.Verify(c, input.Body.Token)
+	if err != nil {
+		return nil, err
+	}
+	return &dto.VerifyRes{Body: claims}, err
 }

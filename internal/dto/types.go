@@ -13,3 +13,7 @@ type ListQuery struct {
 	Search   string `query:"search" json:"search" doc:"Search query" default:""`
 	Includes string `query:"includes" json:"includes" doc:"Includes in JSON" default:"{}"`
 }
+
+type AuthHeader struct {
+	Authorization string `header:"Authorization" doc:"Bearer Token of the user" required:"true"`
+}
