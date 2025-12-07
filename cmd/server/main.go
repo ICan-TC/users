@@ -118,15 +118,6 @@ func main() {
 		api := humachi.New(router, huma.DefaultConfig("API Server", "1.0.0"))
 
 		// Wire up the handlers
-		orgSvc := service.NewOrganizationService(dbconn)
-		handlers.RegisterOrganizationRoutes(api, orgSvc)
-
-		projectSvc := service.NewProjectService(dbconn)
-		handlers.RegisterProjectRoutes(api, projectSvc)
-
-		websiteSvc := service.NewWebsiteService(dbconn)
-		handlers.RegisterWebsiteRoutes(api, websiteSvc)
-
 		usersSvc, err := service.NewUsersService(dbconn)
 		if err != nil {
 			l.Err(err).Msg("Skipping Users Service")

@@ -5,12 +5,6 @@ Server:
 DB:
   Host: localhost
   Port: 5432
-AI:
-  MainModel: googleai/gemini-2.5-flash
-  FallbackModel: googleai/gemini-2.5-flash
-  APIKeys:
-    - AIzaSyBR*******************************
-    - AIzaSyCX*******************************
 Auth:
   Secret: secret
   AccessTokenTTL: 86400

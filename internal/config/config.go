@@ -26,12 +26,6 @@ type DBConfig struct {
 	SSL      bool   `flag:"db_ssl" env:"DB_SSL" yaml:"db_ssl"`
 }
 
-type AIConfig struct {
-	MainModel     string   `flag:"ai_main_model" env:"AI_MAIN_MODEL" yaml:"ai_main_model" validate:"required"`
-	FallbackModel string   `flag:"ai_fallback_model" env:"AI_FALLBACK_MODEL" yaml:"ai_fallback_model" validate:"required"`
-	APIKeys       []string `flag:"ai_api_keys" env:"AI_API_KEYS" yaml:"ai_api_keys" validate:"required"`
-}
-
 type AuthConfig struct {
 	Secret          string `flag:"auth_secret" env:"AUTH_SECRET" yaml:"auth_secret" validate:"required"`
 	AccessTokenTTL  int    `flag:"auth_access_token_ttl" env:"AUTH_ACCESS_TOKEN_TTL" yaml:"auth_access_token_ttl" validate:"min=1,max=86400"`
@@ -43,7 +37,6 @@ type AuthConfig struct {
 type Config struct {
 	Server ServerConfig
 	DB     DBConfig
-	AI     AIConfig
 	Auth   AuthConfig
 }
 
@@ -66,7 +59,6 @@ func Load() {
 	// Bind all config fields recursively
 	cfg.BindConfigStruct(v, &config.Server, "server")
 	cfg.BindConfigStruct(v, &config.DB, "db")
-	cfg.BindConfigStruct(v, &config.AI, "ai")
 	cfg.BindConfigStruct(v, &config.Auth, "auth")
 
 	// Bind CLI flags
@@ -113,9 +105,6 @@ func Load() {
 	}
 	if err := cfg.ValidateConfigStruct(&config.DB); err != nil {
 		panic(fmt.Sprintf("Config for DB validation error: %v", err))
-	}
-	if err := cfg.ValidateConfigStruct(&config.AI); err != nil {
-		panic(fmt.Sprintf("config AIConfig validation error: %v", err))
 	}
 	if err := cfg.ValidateConfigStruct(&config.Auth); err != nil {
 		panic(fmt.Sprintf("config AuthConfig validation error: %v", err))
