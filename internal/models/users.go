@@ -18,4 +18,6 @@ type Users struct {
 	DateOfBirth   *time.Time `bun:"date_of_birth"`
 	CreatedAt     time.Time  `bun:"created_at,default:current_timestamp"`
 	UpdatedAt     time.Time  `bun:"updated_at,default:current_timestamp"`
+
+	Student *Students `bun:"rel:has-one,join:id=user_id"`
 }

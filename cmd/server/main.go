@@ -125,6 +125,13 @@ func main() {
 			handlers.RegisterUsersRoutes(api, usersSvc)
 		}
 
+		studentsSvc, err := service.NewStudentsService(dbconn)
+		if err != nil {
+			l.Err(err).Msg("Skipping Students Service")
+		} else {
+			handlers.RegisterStudentsRoutes(api, studentsSvc)
+		}
+
 		tokenProvider, err := tokens.NewTokenProvider(tokens.TokenProviderArgs{
 			Secret:          cfg.Auth.Secret,
 			AccessTokenTTL:  cfg.Auth.AccessTokenTTL,
