@@ -58,8 +58,8 @@ func (s *TeachersService) GetTeachers(ctx context.Context, params *dto.ListTeach
 	resTeachers := []dto.GetTeacherResBody{}
 	for _, tch := range teachers {
 		newTeacher := dto.GetTeacherResBody{
-			ID:        tch.TeacherID,
-			UserID:    *tch.UserID,
+			ID:     tch.TeacherID,
+			UserID: *tch.UserID,
 		}
 		resTeachers = append(resTeachers, newTeacher)
 	}
