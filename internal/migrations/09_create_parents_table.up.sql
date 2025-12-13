@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS parents (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  deleted_at TIMESTAMPTZ DEFAULT NULL
+);
+
+CREATE INDEX IF NOT EXISTS parents_user_id_idx ON parents(user_id);
