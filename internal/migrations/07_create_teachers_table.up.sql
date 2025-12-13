@@ -5,3 +5,5 @@ CREATE TABLE IF NOT EXISTS teachers (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     deleted_at TIMESTAMPTZ DEFAULT NULL
 );
+
+CREATE INDEX IF NOT EXISTS teachers_user_id_idx ON teachers(user_id);

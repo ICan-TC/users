@@ -6,3 +6,5 @@ CREATE TABLE IF NOT EXISTS students (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     deleted_at TIMESTAMPTZ DEFAULT NULL
 );
+
+CREATE INDEX IF NOT EXISTS students_user_id_idx ON students(user_id);

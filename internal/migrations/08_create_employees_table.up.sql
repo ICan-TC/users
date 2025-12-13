@@ -7,3 +7,5 @@ CREATE TABLE IF NOT EXISTS employees (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     deleted_at TIMESTAMPTZ DEFAULT NULL
 );
+
+CREATE INDEX IF NOT EXISTS employees_user_id_idx ON employees(user_id);
