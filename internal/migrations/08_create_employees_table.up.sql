@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS employees (
+	id text PRIMARY KEY,
+	user_id TEXT NOT NULL REFERENCES users(id),
+	role TEXT NOT NULL,
+	salary DECIMAL(10,3) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    deleted_at TIMESTAMPTZ DEFAULT NULL
+);

@@ -132,6 +132,20 @@ func main() {
 			handlers.RegisterStudentsRoutes(api, studentsSvc)
 		}
 
+		teachersSvc, err := service.NewTeachersService(dbconn)
+		if err != nil {
+			l.Err(err).Msg("Skipping Teachers Service")
+		} else {
+			handlers.RegisterTeachersRoutes(api, teachersSvc)
+		}
+
+		employeesSvc, err := service.NewEmployeesService(dbconn)
+		if err != nil {
+			l.Err(err).Msg("Skipping Employees Service")
+		} else {
+			handlers.RegisterEmployeesRoutes(api, employeesSvc)
+		}
+
 		tokenProvider, err := tokens.NewTokenProvider(tokens.TokenProviderArgs{
 			Secret:          cfg.Auth.Secret,
 			AccessTokenTTL:  cfg.Auth.AccessTokenTTL,
