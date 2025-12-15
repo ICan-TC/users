@@ -70,6 +70,24 @@ func RegisterEnrollmentsRoutes(api huma.API, svc *service.EnrollmentsService) {
 		Description:   "List enrollments",
 		DefaultStatus: http.StatusOK,
 	}, h.ListEnrollments)
+
+	huma.Register(g, huma.Operation{
+		OperationID:   "get-enrollments-by-group",
+		Method:        http.MethodGet,
+		Path:          "/group/{group_id}",
+		Summary:       "Get all enrollments for a group",
+		Description:   "Get all enrollments for a specific group",
+		DefaultStatus: http.StatusOK,
+	}, h.GetEnrollmentsByGroupID)
+
+	huma.Register(g, huma.Operation{
+		OperationID:   "get-enrollments-by-student",
+		Method:        http.MethodGet,
+		Path:          "/student/{student_id}",
+		Summary:       "Get all enrollments for a student",
+		Description:   "Get all enrollments for a specific student",
+		DefaultStatus: http.StatusOK,
+	}, h.GetEnrollmentsByStudentID)
 }
 
 func (h *EnrollmentsHandler) CreateEnrollment(c context.Context, input *dto.CreateEnrollmentReq) (*dto.CreateEnrollmentRes, error) {
@@ -126,4 +144,24 @@ func (h *EnrollmentsHandler) DeleteEnrollment(c context.Context, input *dto.Dele
 
 func (h *EnrollmentsHandler) ListEnrollments(c context.Context, input *dto.ListEnrollmentsReq) (*dto.ListEnrollmentsRes, error) {
 	return h.svc.GetEnrollments(c, input)
+}
+
+func (h *EnrollmentsHandler) GetEnrollmentsByGroupID(c context.Context, input *dto.GetEnrollmentsByGroupIDReq) (*dto.GetEnrollmentsByGroupIDRes, error) {
+	result, err := h.svc.GetEnrollmentsByGroupID(c, input)
+	if err != nil {
+		return nil, err
+	}
+	h.log.Info().Str("group_id", input.GroupID).Int("count", len(result.Body.Enrollments)).
+		Msg("Get enrollments by group ID")
+	return result, nil
+}
+
+func (h *EnrollmentsHandler) GetEnrollmentsByStudentID(c context.Context, input *dto.GetEnrollmentsByStudentIDReq) (*dto.GetEnrollmentsByStudentIDRes, error) {
+	result, err := h.svc.GetEnrollmentsByStudentID(c, input)
+	if err != nil {
+		return nil, err
+	}
+	h.log.Info().Str("student_id", input.StudentID).Int("count", len(result.Body.Enrollments)).
+		Msg("Get enrollments by student ID")
+	return result, nil
 }

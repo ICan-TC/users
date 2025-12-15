@@ -78,7 +78,7 @@ func (s *EnrollmentsService) GetEnrollmentByID(ctx context.Context, studentID, g
 	return s.ModelToRes(&m), nil
 }
 
-func (s *EnrollmentsService) CreateEnrollment(ctx context.Context, studentID string, groupID string, fee float64) (*models.Enrollments, error) {
+func (s *EnrollmentsService) CreateEnrollment(ctx context.Context, studentID string, groupID string, fee *float64) (*models.Enrollments, error) {
 	if _, err := ulid.Parse(studentID); err != nil {
 		return nil, huma.Error400BadRequest("studentID is invalid", err)
 	}
@@ -86,10 +86,21 @@ func (s *EnrollmentsService) CreateEnrollment(ctx context.Context, studentID str
 		return nil, huma.Error400BadRequest("groupID is invalid", err)
 	}
 
+	// If fee not specified, fetch group's default fee
+	actualFee := fee
+	if fee == nil {
+		group := models.Groups{GroupID: groupID}
+		if err := s.db.NewSelect().Model(&group).WherePK("id").Scan(ctx); err != nil {
+			s.log.Err(err).Msg("Couldn't get group for default fee")
+			return nil, huma.Error404NotFound("group not found")
+		}
+		actualFee = &group.DefaultFee
+	}
+
 	m := models.Enrollments{
 		StudentID: studentID,
 		GroupID:   groupID,
-		Fee:       fee,
+		Fee:       *actualFee,
 	}
 	if _, err := s.db.NewInsert().Model(&m).Returning("*").Exec(ctx, &m); err != nil {
 		s.log.Err(err).Msg("Couldn't insert enrollment")
@@ -143,4 +154,92 @@ func (s *EnrollmentsService) ModelToRes(m *models.Enrollments) *dto.EnrollmentMo
 		res.UpdatedAt = int(m.UpdatedAt.Unix())
 	}
 	return res
+}
+
+func (s *EnrollmentsService) GetEnrollmentsByGroupID(ctx context.Context, params *dto.GetEnrollmentsByGroupIDReq) (*dto.GetEnrollmentsByGroupIDRes, error) {
+	// Validate groupID
+	if _, err := ulid.Parse(params.GroupID); err != nil {
+		return nil, huma.Error400BadRequest("groupID is invalid", err)
+	}
+
+	total, err := s.db.NewSelect().Model((*models.Enrollments)(nil)).Where("group_id = ?", params.GroupID).Count(ctx)
+	if err != nil {
+		return nil, huma.Error500InternalServerError(err.Error())
+	}
+
+	var enrollments []models.Enrollments
+	res := &dto.GetEnrollmentsByGroupIDRes{
+		Body: dto.ListEnrollmentsResBody{
+			Total:       total,
+			ListQuery:   params.ListQuery,
+			Enrollments: nil,
+		},
+	}
+
+	q := s.db.NewSelect().Model(&enrollments).Where("group_id = ?", params.GroupID)
+	if params.Search != "" {
+		search := "%" + params.Search + "%"
+		q = q.Where("student_id ILIKE ?", search)
+	}
+	q = q.Order(params.SortBy + " " + params.SortDir)
+	q = q.Limit(params.PerPage)
+	q = q.Offset(params.PerPage * (params.Page - 1))
+
+	if err := q.Scan(ctx, &enrollments); err != nil {
+		if strings.Contains(err.Error(), "no rows") {
+			return res, nil
+		}
+		return nil, huma.Error500InternalServerError(err.Error())
+	}
+
+	resEnrollments := []dto.EnrollmentModelRes{}
+	for _, enr := range enrollments {
+		resEnrollments = append(resEnrollments, *s.ModelToRes(&enr))
+	}
+	res.Body.Enrollments = resEnrollments
+	return res, nil
+}
+
+func (s *EnrollmentsService) GetEnrollmentsByStudentID(ctx context.Context, params *dto.GetEnrollmentsByStudentIDReq) (*dto.GetEnrollmentsByStudentIDRes, error) {
+	// Validate studentID
+	if _, err := ulid.Parse(params.StudentID); err != nil {
+		return nil, huma.Error400BadRequest("studentID is invalid", err)
+	}
+
+	total, err := s.db.NewSelect().Model((*models.Enrollments)(nil)).Where("student_id = ?", params.StudentID).Count(ctx)
+	if err != nil {
+		return nil, huma.Error500InternalServerError(err.Error())
+	}
+
+	var enrollments []models.Enrollments
+	res := &dto.GetEnrollmentsByStudentIDRes{
+		Body: dto.ListEnrollmentsResBody{
+			Total:       total,
+			ListQuery:   params.ListQuery,
+			Enrollments: nil,
+		},
+	}
+
+	q := s.db.NewSelect().Model(&enrollments).Where("student_id = ?", params.StudentID)
+	if params.Search != "" {
+		search := "%" + params.Search + "%"
+		q = q.Where("group_id ILIKE ?", search)
+	}
+	q = q.Order(params.SortBy + " " + params.SortDir)
+	q = q.Limit(params.PerPage)
+	q = q.Offset(params.PerPage * (params.Page - 1))
+
+	if err := q.Scan(ctx, &enrollments); err != nil {
+		if strings.Contains(err.Error(), "no rows") {
+			return res, nil
+		}
+		return nil, huma.Error500InternalServerError(err.Error())
+	}
+
+	resEnrollments := []dto.EnrollmentModelRes{}
+	for _, enr := range enrollments {
+		resEnrollments = append(resEnrollments, *s.ModelToRes(&enr))
+	}
+	res.Body.Enrollments = resEnrollments
+	return res, nil
 }

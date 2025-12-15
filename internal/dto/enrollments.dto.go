@@ -1,13 +1,13 @@
 package dto
 
 // CreateEnrollmentReq defines the request for creating an enrollment
-// StudentID, GroupID, and Fee are required
+// StudentID and GroupID are required, Fee is optional (defaults to group's default fee)
 type CreateEnrollmentReq struct {
 	AuthHeader
 	Body struct {
-		StudentID string  `json:"student_id" doc:"Student ID to enroll" required:"true"`
-		GroupID   string  `json:"group_id" doc:"Group ID to enroll in" required:"true"`
-		Fee       float64 `json:"fee" doc:"Fee for the enrollment" required:"true"`
+		StudentID string   `json:"student_id" doc:"Student ID to enroll" required:"true"`
+		GroupID   string   `json:"group_id" doc:"Group ID to enroll in" required:"true"`
+		Fee       *float64 `json:"fee" doc:"Fee for the enrollment, defaults to group's default fee if not specified" required:"false"`
 	}
 }
 
@@ -61,6 +61,26 @@ type ListEnrollmentsResBody struct {
 }
 
 type ListEnrollmentsRes struct {
+	Body ListEnrollmentsResBody
+}
+
+type GetEnrollmentsByGroupIDReq struct {
+	AuthHeader
+	GroupID string `path:"group_id" doc:"Group ID" required:"true"`
+	ListQuery
+}
+
+type GetEnrollmentsByGroupIDRes struct {
+	Body ListEnrollmentsResBody
+}
+
+type GetEnrollmentsByStudentIDReq struct {
+	AuthHeader
+	StudentID string `path:"student_id" doc:"Student ID" required:"true"`
+	ListQuery
+}
+
+type GetEnrollmentsByStudentIDRes struct {
 	Body ListEnrollmentsResBody
 }
 
