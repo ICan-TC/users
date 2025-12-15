@@ -82,18 +82,7 @@ func (h *GroupsHandler) CreateGroup(c context.Context, input *dto.CreateGroupReq
 		Str("subject", group.Subject).Str("level", group.Level).Any("created", group.CreatedAt).
 		Msg("Created group")
 	return &dto.CreateGroupRes{
-		Body: dto.CreateGroupResBody{
-			ID:          group.GroupID,
-			Name:        group.Name,
-			Description: group.Description,
-			TeacherID:   group.TeacherID,
-			DefaultFee:  group.DefaultFee,
-			Subject:     group.Subject,
-			Level:       group.Level,
-			Metadata:    group.Metadata,
-			CreatedAt:   int(group.CreatedAt.Unix()),
-			UpdatedAt:   int(group.UpdatedAt.Unix()),
-		},
+		Body: *h.svc.ModelToRes(group),
 	}, nil
 }
 
@@ -125,18 +114,7 @@ func (h *GroupsHandler) UpdateGroup(c context.Context, input *dto.UpdateGroupReq
 		return nil, err
 	}
 	return &dto.UpdateGroupRes{
-		Body: dto.UpdateGroupResBody{
-			ID:          group.GroupID,
-			Name:        group.Name,
-			Description: group.Description,
-			TeacherID:   group.TeacherID,
-			DefaultFee:  group.DefaultFee,
-			Subject:     group.Subject,
-			Level:       group.Level,
-			Metadata:    group.Metadata,
-			CreatedAt:   int(group.CreatedAt.Unix()),
-			UpdatedAt:   int(group.UpdatedAt.Unix()),
-		},
+		Body: *h.svc.ModelToRes(group),
 	}, nil
 }
 
@@ -145,21 +123,10 @@ func (h *GroupsHandler) GetGroupByID(c context.Context, input *dto.GetGroupByIDR
 	if err != nil {
 		return nil, err
 	}
-	h.log.Info().Str("id", input.ID).Any("created", group.CreatedAt).
+	h.log.Info().Str("id", input.ID).Int("created_at", group.CreatedAt).
 		Msg("Get group by ID")
 	return &dto.GetGroupByIDRes{
-		Body: dto.GetGroupResBody{
-			ID:          group.GroupID,
-			Name:        group.Name,
-			Description: group.Description,
-			TeacherID:   group.TeacherID,
-			DefaultFee:  group.DefaultFee,
-			Subject:     group.Subject,
-			Level:       group.Level,
-			Metadata:    group.Metadata,
-			CreatedAt:   int(group.CreatedAt.Unix()),
-			UpdatedAt:   int(group.UpdatedAt.Unix()),
-		},
+		Body: *group,
 	}, nil
 }
 

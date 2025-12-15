@@ -54,33 +54,21 @@ func (s *GroupsService) GetGroups(ctx context.Context, params *dto.ListGroupsReq
 		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
-	resGroups := []dto.GetGroupResBody{}
+	resGroups := []dto.GroupModelRes{}
 	for _, grp := range groups {
-		newGroup := dto.GetGroupResBody{
-			ID:          grp.GroupID,
-			Name:        grp.Name,
-			Description: grp.Description,
-			TeacherID:   grp.TeacherID,
-			DefaultFee:  grp.DefaultFee,
-			Subject:     grp.Subject,
-			Level:       grp.Level,
-			Metadata:    grp.Metadata,
-			CreatedAt:   int(grp.CreatedAt.Unix()),
-			UpdatedAt:   int(grp.UpdatedAt.Unix()),
-		}
-		resGroups = append(resGroups, newGroup)
+		resGroups = append(resGroups, *s.ModelToRes(&grp))
 	}
 	res.Body.Groups = resGroups
 	return res, nil
 }
 
-func (s *GroupsService) GetGroupByID(ctx context.Context, id string) (*models.Groups, error) {
+func (s *GroupsService) GetGroupByID(ctx context.Context, id string) (*dto.GroupModelRes, error) {
 	m := models.Groups{GroupID: id}
 	if err := s.db.NewSelect().Model(&m).WherePK("id").Scan(ctx, &m); err != nil {
 		s.log.Err(err).Msg("Couldn't get group")
 		return nil, huma.Error404NotFound("group not found")
 	}
-	return &m, nil
+	return s.ModelToRes(&m), nil
 }
 
 func (s *GroupsService) CreateGroup(ctx context.Context, name string, description string, teacherID string, defaultFee float64, subject string, level string, metadata map[string]interface{}) (*models.Groups, error) {
@@ -126,4 +114,27 @@ func (s *GroupsService) DeleteGroup(ctx context.Context, id string) error {
 		return huma.Error500InternalServerError(err.Error())
 	}
 	return nil
+}
+
+func (s *GroupsService) ModelToRes(m *models.Groups) *dto.GroupModelRes {
+	if m == nil {
+		return nil
+	}
+	res := &dto.GroupModelRes{
+		ID:          m.GroupID,
+		Name:        m.Name,
+		Description: m.Description,
+		TeacherID:   m.TeacherID,
+		DefaultFee:  m.DefaultFee,
+		Subject:     m.Subject,
+		Level:       m.Level,
+		Metadata:    m.Metadata,
+	}
+	if !m.CreatedAt.IsZero() {
+		res.CreatedAt = int(m.CreatedAt.Unix())
+	}
+	if !m.UpdatedAt.IsZero() {
+		res.UpdatedAt = int(m.UpdatedAt.Unix())
+	}
+	return res
 }

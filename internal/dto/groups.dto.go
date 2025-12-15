@@ -15,19 +15,7 @@ type CreateGroupReq struct {
 	}
 }
 
-type CreateGroupRes struct{ Body CreateGroupResBody }
-type CreateGroupResBody struct {
-	ID          string                 `json:"id"`
-	Name        string                 `json:"name"`
-	Description string                 `json:"description"`
-	TeacherID   string                 `json:"teacher_id"`
-	DefaultFee  float64                `json:"default_fee"`
-	Subject     string                 `json:"subject"`
-	Level       string                 `json:"level"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
-	CreatedAt   int                    `json:"created_at"`
-	UpdatedAt   int                    `json:"updated_at"`
-}
+type CreateGroupRes struct{ Body GroupModelRes }
 
 // UpdateGroupReq for updating a group
 // All fields except ID are optional
@@ -44,38 +32,13 @@ type UpdateGroupReq struct {
 		Metadata    map[string]interface{} `json:"metadata" doc:"Additional metadata" required:"false"`
 	}
 }
-type UpdateGroupRes struct{ Body UpdateGroupResBody }
-type UpdateGroupResBody struct {
-	ID          string                 `json:"id"`
-	Name        string                 `json:"name"`
-	Description string                 `json:"description"`
-	TeacherID   string                 `json:"teacher_id"`
-	DefaultFee  float64                `json:"default_fee"`
-	Subject     string                 `json:"subject"`
-	Level       string                 `json:"level"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
-	CreatedAt   int                    `json:"created_at"`
-	UpdatedAt   int                    `json:"updated_at"`
-}
+type UpdateGroupRes struct{ Body GroupModelRes }
 
 type GetGroupByIDReq struct {
 	AuthHeader
 	ID string `path:"id" doc:"ID of the group" required:"true"`
 }
-type GetGroupByIDRes struct{ Body GetGroupResBody }
-
-type GetGroupResBody struct {
-	ID          string                 `json:"id"`
-	Name        string                 `json:"name"`
-	Description string                 `json:"description"`
-	TeacherID   string                 `json:"teacher_id"`
-	DefaultFee  float64                `json:"default_fee"`
-	Subject     string                 `json:"subject"`
-	Level       string                 `json:"level"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
-	CreatedAt   int                    `json:"created_at"`
-	UpdatedAt   int                    `json:"updated_at"`
-}
+type GetGroupByIDRes struct{ Body GroupModelRes }
 
 type DeleteGroupReq struct {
 	AuthHeader
@@ -93,10 +56,23 @@ type ListGroupsReq struct {
 	ListQuery
 }
 type ListGroupsResBody struct {
-	Groups    []GetGroupResBody `json:"groups"`
-	Total     int               `json:"total"`
-	ListQuery ListQuery         `json:"query"`
+	Groups    []GroupModelRes `json:"groups"`
+	Total     int             `json:"total"`
+	ListQuery ListQuery       `json:"query"`
 }
 type ListGroupsRes struct {
 	Body ListGroupsResBody
+}
+
+type GroupModelRes struct {
+	ID          string                 `json:"id"`
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
+	TeacherID   string                 `json:"teacher_id"`
+	DefaultFee  float64                `json:"default_fee"`
+	Subject     string                 `json:"subject"`
+	Level       string                 `json:"level"`
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	CreatedAt   int                    `json:"created_at"`
+	UpdatedAt   int                    `json:"updated_at"`
 }
