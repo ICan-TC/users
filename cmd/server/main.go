@@ -167,6 +167,13 @@ func main() {
 			handlers.RegisterGroupsRoutes(api, groupsSvc)
 		}
 
+		enrollmentsSvc, err := service.NewEnrollmentsService(dbconn)
+		if err != nil {
+			l.Err(err).Msg("Skipping Enrollments Service")
+		} else {
+			handlers.RegisterEnrollmentsRoutes(api, enrollmentsSvc)
+		}
+
 		tokenProvider, err := tokens.NewTokenProvider(tokens.TokenProviderArgs{
 			Secret:          cfg.Auth.Secret,
 			AccessTokenTTL:  cfg.Auth.AccessTokenTTL,
