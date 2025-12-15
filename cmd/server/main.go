@@ -160,6 +160,13 @@ func main() {
 			handlers.RegisterStudentParentsRoutes(api, studentParentsSvc)
 		}
 
+		groupsSvc, err := service.NewGroupsService(dbconn)
+		if err != nil {
+			l.Err(err).Msg("Skipping Groups Service")
+		} else {
+			handlers.RegisterGroupsRoutes(api, groupsSvc)
+		}
+
 		tokenProvider, err := tokens.NewTokenProvider(tokens.TokenProviderArgs{
 			Secret:          cfg.Auth.Secret,
 			AccessTokenTTL:  cfg.Auth.AccessTokenTTL,
