@@ -118,16 +118,10 @@ func (h *StudentsHandler) GetStudentByID(c context.Context, input *dto.GetStuden
 	if err != nil {
 		return nil, err
 	}
-	h.log.Info().Str("id", input.ID).Any("created", student.CreatedAt).
+	h.log.Info().Str("id", input.ID).Int("created", student.CreatedAt).
 		Msg("Get student by ID")
 	return &dto.GetStudentByIDRes{
-		Body: dto.GetStudentResBody{
-			ID:        student.StudentID,
-			Level:     student.Level,
-			UserID:    student.UserID,
-			CreatedAt: int(student.CreatedAt.Unix()),
-			UpdatedAt: int(student.UpdatedAt.Unix()),
-		},
+		Body: *student,
 	}, nil
 }
 

@@ -40,7 +40,7 @@ type GetTeacherByIDReq struct {
 	AuthHeader
 	ID string `path:"id" doc:"ID of the teacher" required:"true"`
 }
-type GetTeacherByIDRes struct{ Body GetTeacherResBody }
+type GetTeacherByIDRes struct{ Body TeachersModelRes }
 
 type GetTeacherResBody struct {
 	ID        string `json:"id"`
@@ -65,10 +65,19 @@ type ListTeachersReq struct {
 	ListQuery
 }
 type ListTeachersResBody struct {
-	Teachers  []GetTeacherResBody `json:"teachers"`
-	Total     int                 `json:"total"`
-	ListQuery ListQuery           `json:"query"`
+	Teachers  []TeachersModelRes `json:"teachers"`
+	Total     int                `json:"total"`
+	ListQuery ListQuery          `json:"query"`
 }
 type ListTeachersRes struct {
 	Body ListTeachersResBody
+}
+
+// TeachersModelRes represents a teacher with embedded user information
+type TeachersModelRes struct {
+	ID        string `json:"id"`
+	UserID    string `json:"user_id"`
+	CreatedAt int    `json:"created_at"`
+	UpdatedAt int    `json:"updated_at"`
+	GetUserResBody
 }

@@ -113,15 +113,10 @@ func (h *TeachersHandler) GetTeacherByID(c context.Context, input *dto.GetTeache
 	if err != nil {
 		return nil, err
 	}
-	h.log.Info().Str("id", input.ID).Any("created", teacher.CreatedAt).
+	h.log.Info().Str("id", input.ID).Int("created", teacher.CreatedAt).
 		Msg("Get teacher by ID")
 	return &dto.GetTeacherByIDRes{
-		Body: dto.GetTeacherResBody{
-			ID:        teacher.TeacherID,
-			UserID:    *teacher.UserID,
-			CreatedAt: int(teacher.CreatedAt.Unix()),
-			UpdatedAt: int(teacher.UpdatedAt.Unix()),
-		},
+		Body: *teacher,
 	}, nil
 }
 

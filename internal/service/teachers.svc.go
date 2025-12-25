@@ -39,7 +39,7 @@ func (s *TeachersService) GetTeachers(ctx context.Context, params *dto.ListTeach
 	}
 	res.Body.Total = total
 
-	q := s.db.NewSelect().Model(&teachers)
+	q := s.db.NewSelect().Model(&teachers).Relation("User")
 	if params.Search != "" {
 		search := "%" + params.Search + "%"
 		q = q.Where("user_id ILIKE ?", search)
@@ -55,25 +55,22 @@ func (s *TeachersService) GetTeachers(ctx context.Context, params *dto.ListTeach
 		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
-	resTeachers := []dto.GetTeacherResBody{}
+	resTeachers := []dto.TeachersModelRes{}
 	for _, tch := range teachers {
-		newTeacher := dto.GetTeacherResBody{
-			ID:     tch.TeacherID,
-			UserID: *tch.UserID,
-		}
+		newTeacher := *s.ModelToRes(&tch)
 		resTeachers = append(resTeachers, newTeacher)
 	}
 	res.Body.Teachers = resTeachers
 	return res, nil
 }
 
-func (s *TeachersService) GetTeacherByID(ctx context.Context, id string) (*models.Teachers, error) {
+func (s *TeachersService) GetTeacherByID(ctx context.Context, id string) (*dto.TeachersModelRes, error) {
 	m := models.Teachers{TeacherID: id}
-	if err := s.db.NewSelect().Model(&m).WherePK("id").Scan(ctx, &m); err != nil {
+	if err := s.db.NewSelect().Model(&m).Relation("User").WherePK("id").Scan(ctx, &m); err != nil {
 		s.log.Err(err).Msg("Couldn't get teacher")
 		return nil, huma.Error404NotFound("teacher not found")
 	}
-	return &m, nil
+	return s.ModelToRes(&m), nil
 }
 
 func (s *TeachersService) CreateTeacher(ctx context.Context, userID string) (*models.Teachers, error) {
@@ -113,4 +110,40 @@ func (s *TeachersService) DeleteTeacher(ctx context.Context, id string) error {
 		return huma.Error500InternalServerError(err.Error())
 	}
 	return nil
+}
+
+func (s *TeachersService) ModelToRes(m *models.Teachers) *dto.TeachersModelRes {
+	if m == nil {
+		return nil
+	}
+	user := m.User
+	var userRes dto.GetUserResBody
+	if user != nil {
+		userRes = dto.GetUserResBody{
+			Username:    user.Username,
+			Email:       user.Email,
+			FirstName:   user.FirstName,
+			FamilyName:  user.FamilyName,
+			PhoneNumber: user.PhoneNumber,
+			DateOfBirth: user.DateOfBirth,
+		}
+		if !user.CreatedAt.IsZero() {
+			userRes.CreatedAt = int(user.CreatedAt.Unix())
+		}
+		if !user.UpdatedAt.IsZero() {
+			userRes.UpdatedAt = int(user.UpdatedAt.Unix())
+		}
+	}
+	res := &dto.TeachersModelRes{
+		ID:             m.TeacherID,
+		UserID:         *m.UserID,
+		GetUserResBody: userRes,
+	}
+	if !m.CreatedAt.IsZero() {
+		res.CreatedAt = int(m.CreatedAt.Unix())
+	}
+	if !m.UpdatedAt.IsZero() {
+		res.UpdatedAt = int(m.UpdatedAt.Unix())
+	}
+	return res
 }

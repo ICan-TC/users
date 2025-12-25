@@ -39,7 +39,7 @@ func (s *StudentsService) GetStudents(ctx context.Context, params *dto.ListStude
 	}
 	res.Body.Total = total
 
-	q := s.db.NewSelect().Model(&students)
+	q := s.db.NewSelect().Model(&students).Relation("User")
 	if params.Search != "" {
 		search := "%" + params.Search + "%"
 		q = q.Where("level ILIKE ?", search)
@@ -55,28 +55,22 @@ func (s *StudentsService) GetStudents(ctx context.Context, params *dto.ListStude
 		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
-	resStudents := []dto.GetStudentResBody{}
+	resStudents := []dto.StudentsModelRes{}
 	for _, st := range students {
-		newStudent := dto.GetStudentResBody{
-			ID:        st.StudentID,
-			Level:     st.Level,
-			UserID:    st.UserID,
-			CreatedAt: int(st.CreatedAt.Unix()),
-			UpdatedAt: int(st.UpdatedAt.Unix()),
-		}
+		newStudent := *s.ModelToRes(&st)
 		resStudents = append(resStudents, newStudent)
 	}
 	res.Body.Students = resStudents
 	return res, nil
 }
 
-func (s *StudentsService) GetStudentByID(ctx context.Context, id string) (*models.Students, error) {
+func (s *StudentsService) GetStudentByID(ctx context.Context, id string) (*dto.StudentsModelRes, error) {
 	m := models.Students{StudentID: id}
-	if err := s.db.NewSelect().Model(&m).WherePK("id").Scan(ctx, &m); err != nil {
+	if err := s.db.NewSelect().Model(&m).Relation("User").WherePK("id").Scan(ctx, &m); err != nil {
 		s.log.Err(err).Msg("Couldn't get student")
 		return nil, huma.Error404NotFound("student not found")
 	}
-	return &m, nil
+	return s.ModelToRes(&m), nil
 }
 
 func (s *StudentsService) CreateStudent(ctx context.Context, level string, userID *string) (*models.Students, error) {
@@ -123,4 +117,41 @@ func (s *StudentsService) DeleteStudent(ctx context.Context, id string) error {
 		return huma.Error500InternalServerError(err.Error())
 	}
 	return nil
+}
+
+func (s *StudentsService) ModelToRes(m *models.Students) *dto.StudentsModelRes {
+	if m == nil {
+		return nil
+	}
+	user := m.User
+	var userRes dto.GetUserResBody
+	if user != nil {
+		userRes = dto.GetUserResBody{
+			Username:    user.Username,
+			Email:       user.Email,
+			FirstName:   user.FirstName,
+			FamilyName:  user.FamilyName,
+			PhoneNumber: user.PhoneNumber,
+			DateOfBirth: user.DateOfBirth,
+		}
+		if !user.CreatedAt.IsZero() {
+			userRes.CreatedAt = int(user.CreatedAt.Unix())
+		}
+		if !user.UpdatedAt.IsZero() {
+			userRes.UpdatedAt = int(user.UpdatedAt.Unix())
+		}
+	}
+	res := &dto.StudentsModelRes{
+		ID:             m.StudentID,
+		Level:          m.Level,
+		UserID:         m.UserID,
+		GetUserResBody: userRes,
+	}
+	if !m.CreatedAt.IsZero() {
+		res.CreatedAt = int(m.CreatedAt.Unix())
+	}
+	if !m.UpdatedAt.IsZero() {
+		res.UpdatedAt = int(m.UpdatedAt.Unix())
+	}
+	return res
 }
