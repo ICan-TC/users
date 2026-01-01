@@ -33,6 +33,10 @@ func AuthMiddleware(hc huma.Context, next func(huma.Context)) {
 	_, err := tokens.ParseToken(ctx, splits[1], config.Get().Auth.Secret, "access")
 	if err != nil {
 		hc.SetStatus(http.StatusUnauthorized)
+		hc.SetHeader("Content-Type", "text/plain")
+		hc.BodyWriter().Write(
+			[]byte(err.Error()),
+		)
 		return
 	}
 	next(hc)
