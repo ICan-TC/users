@@ -83,7 +83,7 @@ func RegisterUsersRoutes(api huma.API, svc *service.UsersService) {
 }
 
 func (h *UsersHandler) CreateUser(c context.Context, input *dto.CreateUserReq) (*dto.CreateUserRes, error) {
-	user, err := h.svc.CreateUser(c, input.Body.Email, input.Body.Username, input.Body.Password)
+	user, err := h.svc.CreateUser(c, &input.Body)
 	if err != nil {
 		return nil, huma.Error500InternalServerError(err.Error())
 	}

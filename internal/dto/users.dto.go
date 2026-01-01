@@ -4,16 +4,17 @@ import "time"
 
 type CreateUserReq struct {
 	AuthHeader
-	Body struct {
-		Username string `json:"username" doc:"Username of the user" minLength:"3" maxLength:"255" required:"true"`
-		Email    string `json:"email" doc:"Email of the user" Email:"true" required:"true" format:"email"`
-		Password string `json:"password" doc:"Password of the user" minLength:"8" maxLength:"255" required:"true"`
+	Body CreateUserReqBody
+}
+type CreateUserReqBody struct {
+	Username string `json:"username" doc:"Username of the user" minLength:"3" maxLength:"255" required:"true"`
+	Email    string `json:"email" doc:"Email of the user" Email:"true" required:"true" format:"email"`
+	Password string `json:"password" doc:"Password of the user" minLength:"8" maxLength:"255" required:"true"`
 
-		FirstName   *string `json:"first_name" doc:"First name of the user" required:"false"`
-		FamilyName  *string `json:"family_name" doc:"Family name of the user" required:"false"`
-		PhoneNumber *string `json:"phone_number" doc:"Phone number of the user" required:"false"`
-		DateOfBirth *string `json:"date_of_birth" doc:"Date of birth of the user" required:"false"`
-	}
+	FirstName   *string `json:"first_name" doc:"First name of the user" required:"false"`
+	FamilyName  *string `json:"family_name" doc:"Family name of the user" required:"false"`
+	PhoneNumber *string `json:"phone_number" doc:"Phone number of the user" required:"false"`
+	DateOfBirth *string `json:"date_of_birth" doc:"Date of birth of the user" required:"false"`
 }
 
 type CreateUserRes struct{ Body CreateUserResBody }

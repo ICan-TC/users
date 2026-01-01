@@ -7,6 +7,7 @@ import (
 
 	"github.com/ICan-TC/lib/logging"
 	"github.com/ICan-TC/lib/tokens"
+	"github.com/ICan-TC/users/internal/dto"
 	"github.com/ICan-TC/users/internal/models"
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/rs/zerolog"
@@ -32,7 +33,7 @@ type Tokens struct {
 }
 
 func (s *AuthService) Signup(ctx context.Context, email, username, password string) (*models.Users, *tokens.TokensPair, error) {
-	u, err := s.usvc.CreateUser(ctx, email, username, password)
+	u, err := s.usvc.CreateUser(ctx, &dto.CreateUserReqBody{Email: email, Username: username, Password: password})
 	if err != nil {
 		return nil, nil, err
 	}

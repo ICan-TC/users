@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/ICan-TC/lib/logging"
 	"github.com/ICan-TC/users/internal/dto"
@@ -112,16 +113,34 @@ func (s *UsersService) GetUserByField(ctx context.Context, f string, v string) (
 	return &m, nil
 }
 
-func (s *UsersService) CreateUser(ctx context.Context, email, username, password string) (*models.Users, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+func (s *UsersService) CreateUser(ctx context.Context, data *dto.CreateUserReqBody) (*models.Users, error) {
+	// TODO: fix this, should probably create a new struct for this function's input
+	hash, err := bcrypt.GenerateFromPassword([]byte(data.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, nil
 	}
+	userID := ulid.Make().String()
 	m := models.Users{
-		Username:     username,
-		Email:        email,
+		Username:     data.Username,
+		Email:        data.Email,
 		PasswordHash: string(hash),
-		UserID:       ulid.Make().String(),
+		UserID:       userID,
+	}
+	if data.DateOfBirth != nil {
+		parsedTime, err := time.Parse(time.RFC3339, *data.DateOfBirth)
+		if err != nil {
+			return nil, huma.Error400BadRequest("invalid date format", err)
+		}
+		m.DateOfBirth = &parsedTime
+	}
+	if data.FirstName != nil {
+		m.FirstName = data.FirstName
+	}
+	if data.FamilyName != nil {
+		m.FamilyName = data.FamilyName
+	}
+	if data.PhoneNumber != nil {
+		m.PhoneNumber = data.PhoneNumber
 	}
 	if _, err := s.db.NewInsert().Model(&m).Returning("*").Exec(ctx, &m); err != nil {
 		s.log.Err(err).Msg("Couldn't insert user")
