@@ -89,10 +89,22 @@ func (h *UsersHandler) CreateUser(c context.Context, input *dto.CreateUserReq) (
 	}
 	h.log.Info().Str("username", input.Body.Username).Str("email", input.Body.Email).Str("id", user.UserID).Any("created", user.CreatedAt).
 		Msg("Created user")
+	body := dto.CreateUserResBody{
+		ID:          user.UserID,
+		Username:    user.Username,
+		Email:       user.Email,
+		FirstName:   user.FirstName,
+		FamilyName:  user.FamilyName,
+		PhoneNumber: user.PhoneNumber,
+		CreatedAt:   int(user.CreatedAt.Unix()),
+		UpdatedAt:   int(user.CreatedAt.Unix()),
+	}
+	if user.DateOfBirth != nil {
+		dateOfBirthStr := user.DateOfBirth.Format("2006-01-02")
+		body.DateOfBirth = &dateOfBirthStr
+	}
 	return &dto.CreateUserRes{
-		Body: dto.CreateUserResBody{
-			ID: user.UserID, Username: user.Username, Email: user.Email, CreatedAt: int(user.CreatedAt.Unix()), UpdatedAt: int(user.CreatedAt.Unix()),
-		},
+		Body: body,
 	}, nil
 }
 
