@@ -8,7 +8,6 @@ import (
 
 type Users struct {
 	bun.BaseModel `bun:"table:users,alias:u"`
-	UserID        string     `bun:"id,pk"`
 	Username      string     `bun:"username"`
 	Email         string     `bun:"email"`
 	PasswordHash  string     `bun:"password_hash"`
@@ -19,5 +18,9 @@ type Users struct {
 	CreatedAt     time.Time  `bun:"created_at,default:current_timestamp"`
 	UpdatedAt     time.Time  `bun:"updated_at,default:current_timestamp"`
 
-	Student *Students `bun:"rel:has-one,join:id=user_id"`
+	UserID   string     `bun:"id,pk"`
+	Student  *Students  `bun:"rel:has-one,join:id=user_id"`
+	Teacher  *Teachers  `bun:"rel:has-one,join:id=user_id"`
+	Parent   *Parents   `bun:"rel:has-one,join:id=user_id"`
+	Employee *Employees `bun:"rel:has-one,join:id=user_id"`
 }

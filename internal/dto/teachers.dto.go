@@ -79,5 +79,5 @@ type TeachersModelRes struct {
 	UserID    string `json:"user_id"`
 	CreatedAt int    `json:"created_at"`
 	UpdatedAt int    `json:"updated_at"`
-	GetUserResBody
+	UserModelRes
 }

@@ -41,7 +41,13 @@ func (s *UsersService) GetUsers(ctx context.Context, params *dto.ListUsersReq) (
 	}
 	res.Body.Total = total
 
-	q := s.db.NewSelect().Model(&users)
+	q := s.db.NewSelect().
+		Model(&users).
+		Relation("Teacher").
+		Relation("Student").
+		Relation("Employee").
+		Relation("Parent")
+
 	if params.Search != "" {
 		search := "%" + params.Search + "%"
 		q = q.Where(
@@ -59,6 +65,9 @@ func (s *UsersService) GetUsers(ctx context.Context, params *dto.ListUsersReq) (
 	q = q.Limit(params.PerPage)
 	q = q.Offset(params.PerPage * (params.Page - 1))
 
+	qc := q.Clone()
+	s.log.Info().Msg(qc.String())
+
 	if err := q.Scan(ctx, &users); err != nil {
 		if strings.Contains(err.Error(), "no rows") {
 			return res, nil
@@ -66,54 +75,34 @@ func (s *UsersService) GetUsers(ctx context.Context, params *dto.ListUsersReq) (
 		return nil, huma.Error500InternalServerError(err.Error())
 	}
 
-	resUsers := []dto.GetUserResBody{}
+	resUsers := []dto.UserModelRes{}
 	for _, u := range users {
-		newUser := dto.GetUserResBody{
-			ID:       u.UserID,
-			Username: u.Username,
-			Email:    u.Email,
-		}
-		if u.FirstName != nil {
-			newUser.FirstName = u.FirstName
-		}
-		if u.FamilyName != nil {
-			newUser.FamilyName = u.FamilyName
-		}
-		if u.PhoneNumber != nil {
-			newUser.PhoneNumber = u.PhoneNumber
-		}
-		if u.DateOfBirth != nil {
-			newUser.DateOfBirth = u.DateOfBirth
-		}
-		newUser.CreatedAt = int(u.CreatedAt.Unix())
-		newUser.UpdatedAt = int(u.UpdatedAt.Unix())
-		resUsers = append(resUsers, newUser)
-
+		resUsers = append(resUsers, *s.ModelToRes(&u, false))
 	}
 	res.Body.Users = resUsers
 	return res, nil
 }
 
-func (s *UsersService) GetUserByID(ctx context.Context, id string) (*models.Users, error) {
+func (s *UsersService) GetUserByID(ctx context.Context, id string) (*dto.UserModelRes, error) {
 	m := models.Users{UserID: id}
 	if err := s.db.NewSelect().Model(&m).WherePK("id").Scan(ctx, &m); err != nil {
 		s.log.Err(err).Msg("Couldn't get user")
 		return nil, huma.Error404NotFound("user not found")
 	}
-	return &m, nil
+	return s.ModelToRes(&m, false), nil
 }
 
-func (s *UsersService) GetUserByField(ctx context.Context, f string, v string) (*models.Users, error) {
+func (s *UsersService) GetUserByField(ctx context.Context, f string, v string, include_hash bool) (*dto.UserModelRes, error) {
 	m := models.Users{}
 	q := s.db.NewSelect().Model(&m).Where(fmt.Sprintf("%s = ?", f), v)
 	s.log.Debug().Str("query", q.String()).Msg("Couldn't get user")
 	if err := q.Scan(ctx, &m); err != nil {
 		return nil, huma.Error500InternalServerError(err.Error())
 	}
-	return &m, nil
+	return s.ModelToRes(&m, include_hash), nil
 }
 
-func (s *UsersService) CreateUser(ctx context.Context, data *dto.CreateUserReqBody) (*models.Users, error) {
+func (s *UsersService) CreateUser(ctx context.Context, data *dto.CreateUserReqBody) (*dto.UserModelRes, error) {
 	// TODO: fix this, should probably create a new struct for this function's input
 	hash, err := bcrypt.GenerateFromPassword([]byte(data.Password), bcrypt.DefaultCost)
 	if err != nil {
@@ -152,10 +141,10 @@ func (s *UsersService) CreateUser(ctx context.Context, data *dto.CreateUserReqBo
 		}
 		return nil, huma.Error500InternalServerError(err.Error())
 	}
-	return &m, nil
+	return s.ModelToRes(&m, false), nil
 }
 
-func (s *UsersService) UpdateUser(ctx context.Context, user models.Users) (*models.Users, error) {
+func (s *UsersService) UpdateUser(ctx context.Context, user models.Users) (*dto.UserModelRes, error) {
 	m := user
 	m.UserID = user.UserID
 	if err := s.db.NewUpdate().Model(&m).Returning("*").OmitZero().WherePK("id").Scan(ctx, &m); err != nil {
@@ -164,7 +153,7 @@ func (s *UsersService) UpdateUser(ctx context.Context, user models.Users) (*mode
 		}
 		return nil, huma.Error500InternalServerError(err.Error())
 	}
-	return &m, nil
+	return s.ModelToRes(&m, false), nil
 }
 
 func (s *UsersService) DeleteUser(ctx context.Context, id string) error {
@@ -176,4 +165,54 @@ func (s *UsersService) DeleteUser(ctx context.Context, id string) error {
 		return huma.Error500InternalServerError(err.Error())
 	}
 	return nil
+}
+
+func (s *UsersService) ModelToRes(m *models.Users, include_hash bool) *dto.UserModelRes {
+	return UsersModelToRes(m, include_hash)
+}
+
+func UsersModelToRes(m *models.Users, include_hash bool) *dto.UserModelRes {
+	if m == nil {
+		return nil
+	}
+	res := &dto.UserModelRes{}
+	res.ID = m.UserID
+	res.Username = m.Username
+	res.Email = m.Email
+
+	if include_hash {
+		res.PasswordHash = &m.PasswordHash
+	}
+
+	if m.FirstName != nil {
+		res.FirstName = m.FirstName
+	}
+	if m.FamilyName != nil {
+		res.FamilyName = m.FamilyName
+	}
+	if m.PhoneNumber != nil {
+		res.PhoneNumber = m.PhoneNumber
+	}
+	if m.DateOfBirth != nil {
+		res.DateOfBirth = m.DateOfBirth
+	}
+	if m.Student != nil {
+		res.StudentID = &m.Student.StudentID
+	}
+	if m.Teacher != nil {
+		res.TeacherID = &m.Teacher.TeacherID
+	}
+	if m.Employee != nil {
+		res.EmployeeID = &m.Employee.EmployeeID
+	}
+	if m.Parent != nil {
+		res.ParentID = &m.Parent.ParentID
+	}
+	if !m.CreatedAt.IsZero() {
+		res.CreatedAt = int(m.CreatedAt.Unix())
+	}
+	if !m.UpdatedAt.IsZero() {
+		res.UpdatedAt = int(m.UpdatedAt.Unix())
+	}
+	return res
 }

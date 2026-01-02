@@ -60,7 +60,7 @@ func (s *ParentsService) GetParents(ctx context.Context, params *dto.ListParents
 		newParent := dto.ParentModelRes{
 			ID:     par.ParentID,
 			UserID: par.UserID,
-			GetUserResBody: dto.GetUserResBody{
+			UserModelRes: dto.UserModelRes{
 				ID:          par.User.UserID,
 				Username:    par.User.Username,
 				Email:       par.User.Email,
@@ -149,9 +149,9 @@ func (s *ParentsService) ModelToRes(m *models.Parents) *dto.ParentModelRes {
 		return nil
 	}
 	user := m.User
-	var userRes dto.GetUserResBody
+	var userRes dto.UserModelRes
 	if user != nil {
-		userRes = dto.GetUserResBody{
+		userRes = dto.UserModelRes{
 			Username:    user.Username,
 			Email:       user.Email,
 			FirstName:   user.FirstName,
@@ -167,10 +167,10 @@ func (s *ParentsService) ModelToRes(m *models.Parents) *dto.ParentModelRes {
 		}
 	}
 	res := &dto.ParentModelRes{
-		ID:             m.ParentID,
-		UserID:         m.UserID,
-		Students:       nil,
-		GetUserResBody: userRes,
+		ID:           m.ParentID,
+		UserID:       m.UserID,
+		Students:     nil,
+		UserModelRes: userRes,
 	}
 	if !m.CreatedAt.IsZero() {
 		res.CreatedAt = int(m.CreatedAt.Unix())

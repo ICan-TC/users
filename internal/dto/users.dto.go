@@ -19,17 +19,7 @@ type CreateUserReqBody struct {
 
 type CreateUserRes struct{ Body CreateUserResBody }
 type CreateUserResBody struct {
-	ID       string `json:"id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
-
-	FirstName   *string `json:"first_name"`
-	FamilyName  *string `json:"family_name"`
-	PhoneNumber *string `json:"phone_number"`
-	DateOfBirth *string `json:"date_of_birth"`
-
-	CreatedAt int `json:"created_at"`
-	UpdatedAt int `json:"updated_at"`
+	UserModelRes
 }
 
 type UpdateUserReq struct {
@@ -47,17 +37,7 @@ type UpdateUserReq struct {
 }
 type UpdateUserRes struct{ Body UpdateUserResBody }
 type UpdateUserResBody struct {
-	ID       string `json:"id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
-
-	FirstName   *string    `json:"first_name"`
-	FamilyName  *string    `json:"family_name"`
-	PhoneNumber *string    `json:"phone_number"`
-	DateOfBirth *time.Time `json:"date_of_birth"`
-
-	CreatedAt int `json:"created_at"`
-	UpdatedAt int `json:"updated_at"`
+	UserModelRes
 }
 
 type GetUserByFieldReq struct {
@@ -65,27 +45,13 @@ type GetUserByFieldReq struct {
 	Field string `path:"field" doc:"Field to find the user by" enum:"username,email,id" required:"true"`
 	Value string `path:"value" doc:"Value to find the user by" required:"true"`
 }
-type GetUserByFieldRes struct{ Body GetUserResBody }
+type GetUserByFieldRes struct{ Body UserModelRes }
 
 type GetUserByIDReq struct {
 	AuthHeader
 	ID string `path:"id" doc:"ID of the user" required:"true"`
 }
-type GetUserByIDRes struct{ Body GetUserResBody }
-
-type GetUserResBody struct {
-	ID       string `json:"id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
-
-	FirstName   *string    `json:"first_name"`
-	FamilyName  *string    `json:"family_name"`
-	PhoneNumber *string    `json:"phone_number"`
-	DateOfBirth *time.Time `json:"date_of_birth"`
-
-	CreatedAt int `json:"created_at"`
-	UpdatedAt int `json:"updated_at"`
-}
+type GetUserByIDRes struct{ Body UserModelRes }
 
 type DeleteUserReq struct {
 	AuthHeader
@@ -105,11 +71,31 @@ type ListUsersReq struct {
 }
 
 type ListUsersResBody struct {
-	Users     []GetUserResBody `json:"users"`
-	Total     int              `json:"total"`
-	ListQuery ListQuery        `json:"query"`
+	Users     []UserModelRes `json:"users"`
+	Total     int            `json:"total"`
+	ListQuery ListQuery      `json:"query"`
 }
 
 type ListUsersRes struct {
 	Body ListUsersResBody
+}
+
+type UserModelRes struct {
+	ID       string `json:"id"`
+	Username string `json:"username"`
+	Email    string `json:"email"`
+
+	FirstName    *string    `json:"first_name"`
+	FamilyName   *string    `json:"family_name"`
+	PhoneNumber  *string    `json:"phone_number"`
+	DateOfBirth  *time.Time `json:"date_of_birth"`
+	PasswordHash *string    `json:"-"`
+
+	StudentID  *string `json:"student_id"`
+	TeacherID  *string `json:"teacher_id"`
+	EmployeeID *string `json:"employee_id"`
+	ParentID   *string `json:"parent_id"`
+
+	CreatedAt int `json:"created_at"`
+	UpdatedAt int `json:"updated_at"`
 }

@@ -87,24 +87,12 @@ func (h *UsersHandler) CreateUser(c context.Context, input *dto.CreateUserReq) (
 	if err != nil {
 		return nil, huma.Error500InternalServerError(err.Error())
 	}
-	h.log.Info().Str("username", input.Body.Username).Str("email", input.Body.Email).Str("id", user.UserID).Any("created", user.CreatedAt).
+	h.log.Info().Str("username", input.Body.Username).Str("email", input.Body.Email).Str("id", user.ID).Any("created", user.CreatedAt).
 		Msg("Created user")
-	body := dto.CreateUserResBody{
-		ID:          user.UserID,
-		Username:    user.Username,
-		Email:       user.Email,
-		FirstName:   user.FirstName,
-		FamilyName:  user.FamilyName,
-		PhoneNumber: user.PhoneNumber,
-		CreatedAt:   int(user.CreatedAt.Unix()),
-		UpdatedAt:   int(user.CreatedAt.Unix()),
-	}
-	if user.DateOfBirth != nil {
-		dateOfBirthStr := user.DateOfBirth.Format("2006-01-02")
-		body.DateOfBirth = &dateOfBirthStr
-	}
 	return &dto.CreateUserRes{
-		Body: body,
+		Body: dto.CreateUserResBody{
+			UserModelRes: *user,
+		},
 	}, nil
 }
 
@@ -137,30 +125,18 @@ func (h *UsersHandler) UpdateUser(c context.Context, input *dto.UpdateUserReq) (
 	}
 	return &dto.UpdateUserRes{
 		Body: dto.UpdateUserResBody{
-			ID:          user.UserID,
-			Username:    user.Username,
-			Email:       user.Email,
-			FirstName:   user.FirstName,
-			FamilyName:  user.FamilyName,
-			PhoneNumber: user.PhoneNumber,
-			DateOfBirth: user.DateOfBirth,
-			CreatedAt:   int(user.CreatedAt.Unix()),
-			UpdatedAt:   int(user.UpdatedAt.Unix()),
+			UserModelRes: *user,
 		},
 	}, nil
 }
 
 func (h *UsersHandler) GetUserByField(c context.Context, input *dto.GetUserByFieldReq) (*dto.GetUserByFieldRes, error) {
-	a, err := h.svc.GetUserByField(c, input.Field, input.Value)
+	user, err := h.svc.GetUserByField(c, input.Field, input.Value, false)
 	if err != nil {
 		return nil, err
 	}
 	return &dto.GetUserByFieldRes{
-		Body: dto.GetUserResBody{
-			ID:       a.UserID,
-			Username: a.Username,
-			Email:    a.Email,
-		},
+		Body: *user,
 	}, nil
 }
 func (h *UsersHandler) GetUserByID(c context.Context, input *dto.GetUserByIDReq) (*dto.GetUserByIDRes, error) {
@@ -170,11 +146,7 @@ func (h *UsersHandler) GetUserByID(c context.Context, input *dto.GetUserByIDReq)
 	}
 	h.log.Info().Str("id", input.ID).Str("username", user.Username).Str("email", user.Email).Any("created", user.CreatedAt).
 		Msg("Get user by ID")
-	return &dto.GetUserByIDRes{
-		Body: dto.GetUserResBody{
-			ID: user.UserID, Username: user.Username, Email: user.Email, CreatedAt: int(user.CreatedAt.Unix()), UpdatedAt: int(user.CreatedAt.Unix()),
-		},
-	}, nil
+	return &dto.GetUserByIDRes{Body: *user}, nil
 }
 func (h *UsersHandler) DeleteUser(c context.Context, input *dto.DeleteUserReq) (*dto.DeleteUserRes, error) {
 	if err := h.svc.DeleteUser(c, input.ID); err != nil {

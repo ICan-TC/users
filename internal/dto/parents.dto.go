@@ -75,5 +75,5 @@ type ParentModelRes struct {
 	Students  []GetStudentResBody `json:"students,omitempty"`
 	CreatedAt int                 `json:"created_at"`
 	UpdatedAt int                 `json:"updated_at"`
-	GetUserResBody
+	UserModelRes
 }
