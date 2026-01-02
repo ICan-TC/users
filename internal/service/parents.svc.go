@@ -151,20 +151,7 @@ func (s *ParentsService) ModelToRes(m *models.Parents) *dto.ParentModelRes {
 	user := m.User
 	var userRes dto.UserModelRes
 	if user != nil {
-		userRes = dto.UserModelRes{
-			Username:    user.Username,
-			Email:       user.Email,
-			FirstName:   user.FirstName,
-			FamilyName:  user.FamilyName,
-			PhoneNumber: user.PhoneNumber,
-			DateOfBirth: user.DateOfBirth,
-		}
-		if !user.CreatedAt.IsZero() {
-			userRes.CreatedAt = int(user.CreatedAt.Unix())
-		}
-		if !user.UpdatedAt.IsZero() {
-			userRes.UpdatedAt = int(user.UpdatedAt.Unix())
-		}
+		userRes = *UsersModelToRes(user, false)
 	}
 	res := &dto.ParentModelRes{
 		ID:           m.ParentID,

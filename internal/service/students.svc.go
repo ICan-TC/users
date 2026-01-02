@@ -126,20 +126,7 @@ func (s *StudentsService) ModelToRes(m *models.Students) *dto.StudentsModelRes {
 	user := m.User
 	var userRes dto.UserModelRes
 	if user != nil {
-		userRes = dto.UserModelRes{
-			Username:    user.Username,
-			Email:       user.Email,
-			FirstName:   user.FirstName,
-			FamilyName:  user.FamilyName,
-			PhoneNumber: user.PhoneNumber,
-			DateOfBirth: user.DateOfBirth,
-		}
-		if !user.CreatedAt.IsZero() {
-			userRes.CreatedAt = int(user.CreatedAt.Unix())
-		}
-		if !user.UpdatedAt.IsZero() {
-			userRes.UpdatedAt = int(user.UpdatedAt.Unix())
-		}
+		userRes = *UsersModelToRes(user, false)
 	}
 	res := &dto.StudentsModelRes{
 		ID:           m.StudentID,
