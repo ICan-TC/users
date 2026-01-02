@@ -25,10 +25,6 @@ func NewStudentsService(db *bun.DB) (*StudentsService, error) {
 }
 
 func (s *StudentsService) GetStudents(ctx context.Context, params *dto.ListStudentsReq) (*dto.ListStudentsRes, error) {
-	total, err := s.db.NewSelect().Model((*models.Students)(nil)).Count(ctx)
-	if err != nil {
-		return nil, huma.Error500InternalServerError(err.Error())
-	}
 	var students []models.Students
 	res := &dto.ListStudentsRes{
 		Body: dto.ListStudentsResBody{
@@ -37,13 +33,24 @@ func (s *StudentsService) GetStudents(ctx context.Context, params *dto.ListStude
 			Students:  nil,
 		},
 	}
-	res.Body.Total = total
-
 	q := s.db.NewSelect().Model(&students).Relation("User")
 	if params.Search != "" {
 		search := "%" + params.Search + "%"
 		q = q.Where("level ILIKE ?", search)
 	}
+
+	filters, err := dto.ParseFilters(params.Filters)
+	if err != nil {
+		s.log.Err(err).Msg("Couldn't parse filters")
+	}
+	q = dto.ApplyFilters(filters, q)
+
+	total, err := q.Clone().Count(ctx)
+	if err != nil {
+		return nil, huma.Error500InternalServerError(err.Error())
+	}
+	res.Body.Total = total
+
 	q = q.Order(params.SortBy + " " + params.SortDir)
 	q = q.Limit(params.PerPage)
 	q = q.Offset(params.PerPage * (params.Page - 1))
