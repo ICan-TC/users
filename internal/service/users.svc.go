@@ -27,10 +27,6 @@ func NewUsersService(db *bun.DB) (*UsersService, error) {
 }
 
 func (s *UsersService) GetUsers(ctx context.Context, params *dto.ListUsersReq) (*dto.ListUsersRes, error) {
-	total, err := s.db.NewSelect().Model((*models.Users)(nil)).Count(ctx)
-	if err != nil {
-		return nil, huma.Error500InternalServerError(err.Error())
-	}
 	var users []models.Users
 	res := &dto.ListUsersRes{
 		Body: dto.ListUsersResBody{
@@ -39,7 +35,6 @@ func (s *UsersService) GetUsers(ctx context.Context, params *dto.ListUsersReq) (
 			Users:     nil,
 		},
 	}
-	res.Body.Total = total
 
 	q := s.db.NewSelect().
 		Model(&users).
@@ -55,18 +50,28 @@ func (s *UsersService) GetUsers(ctx context.Context, params *dto.ListUsersReq) (
 			search, search, search, search,
 		)
 	}
-	if params.Filters != "" {
-		s.log.Warn().Str("filters", params.Filters).Msg("filters are not implemented yet")
+	// if params.Filters != "" {
+	// 	s.log.Warn().Str("filters", params.Filters).Msg("filters are not implemented yet")
+	// }
+	// if params.Includes != "" {
+	// 	s.log.Warn().Str("includes", params.Includes).Msg("includes are not implemented yet")
+	// }
+
+	filters, err := dto.ParseFilters(params.Filters)
+	if err != nil {
+		s.log.Err(err).Msg("Couldn't parse filters")
 	}
-	if params.Includes != "" {
-		s.log.Warn().Str("includes", params.Includes).Msg("includes are not implemented yet")
+	q = dto.ApplyFilters(filters, q)
+
+	total, err := q.Clone().Count(ctx)
+	if err != nil {
+		return nil, huma.Error500InternalServerError(err.Error())
 	}
+	res.Body.Total = total
+
 	q = q.Order(params.SortBy + " " + params.SortDir)
 	q = q.Limit(params.PerPage)
 	q = q.Offset(params.PerPage * (params.Page - 1))
-
-	qc := q.Clone()
-	s.log.Info().Msg(qc.String())
 
 	if err := q.Scan(ctx, &users); err != nil {
 		if strings.Contains(err.Error(), "no rows") {
