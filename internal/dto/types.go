@@ -71,6 +71,10 @@ func ApplyFilters(filters []Filter, q *bun.SelectQuery) *bun.SelectQuery {
 			q = q.Where(fmt.Sprintf("%s IS ?", field), value)
 		case "nis":
 			q = q.Where(fmt.Sprintf("%s IS NOT ?", field), value)
+		case "null":
+			q = q.Where(fmt.Sprintf("%s IS NULL", field))
+		case "nnull":
+			q = q.Where(fmt.Sprintf("%s IS NOT NULL", field))
 		default:
 			log.Warn().Msg(fmt.Sprintf("unknown filter rule: %s", f.Rule))
 		}
