@@ -36,7 +36,7 @@ func (s *StudentsService) GetStudents(ctx context.Context, params *dto.ListStude
 	q := s.db.NewSelect().Model(&students).Relation("User")
 	if params.Search != "" {
 		search := "%" + params.Search + "%"
-		q = q.Where("level ILIKE ?", search)
+		q = q.Where("level ILIKE ? OR user_id ILIKE ? OR username ILIKE ? OR email ILIKE ? OR first_name ILIKE ? OR family_name ILIKE ?", search, search, search, search, search, search)
 	}
 
 	filters, err := dto.ParseFilters(params.Filters)
@@ -47,6 +47,7 @@ func (s *StudentsService) GetStudents(ctx context.Context, params *dto.ListStude
 
 	total, err := q.Clone().Count(ctx)
 	if err != nil {
+		s.log.Error().Err(err).Msg("Couldn't get students")
 		return nil, huma.Error500InternalServerError(err.Error())
 	}
 	res.Body.Total = total
@@ -56,6 +57,7 @@ func (s *StudentsService) GetStudents(ctx context.Context, params *dto.ListStude
 	q = q.Offset(params.PerPage * (params.Page - 1))
 
 	if err := q.Scan(ctx, &students); err != nil {
+		s.log.Error().Err(err).Msg("Couldn't get students")
 		if strings.Contains(err.Error(), "no rows") {
 			return res, nil
 		}
