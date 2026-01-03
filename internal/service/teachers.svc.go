@@ -33,7 +33,7 @@ func (s *TeachersService) GetTeachers(ctx context.Context, params *dto.ListTeach
 	res := &dto.ListTeachersRes{
 		Body: dto.ListTeachersResBody{
 			Total:     0,
-			ListQuery: params.ListQuery,
+			ListQuery: dto.ListQueryRes{},
 			Teachers:  nil,
 		},
 	}
@@ -61,6 +61,9 @@ func (s *TeachersService) GetTeachers(ctx context.Context, params *dto.ListTeach
 		resTeachers = append(resTeachers, newTeacher)
 	}
 	res.Body.Teachers = resTeachers
+	res.Body.ListQuery = dto.ListQueryRes{
+		Page: params.Page, PerPage: params.PerPage, SortBy: params.SortBy, SortDir: params.SortDir, Search: params.Search, Includes: params.Includes, /*Filters: filters,*/
+	}
 	return res, nil
 }
 

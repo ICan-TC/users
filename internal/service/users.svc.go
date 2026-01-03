@@ -31,7 +31,7 @@ func (s *UsersService) GetUsers(ctx context.Context, params *dto.ListUsersReq) (
 	res := &dto.ListUsersRes{
 		Body: dto.ListUsersResBody{
 			Total:     0,
-			ListQuery: params.ListQuery,
+			ListQuery: dto.ListQueryRes{},
 			Users:     nil,
 		},
 	}
@@ -85,6 +85,9 @@ func (s *UsersService) GetUsers(ctx context.Context, params *dto.ListUsersReq) (
 		resUsers = append(resUsers, *s.ModelToRes(&u, false))
 	}
 	res.Body.Users = resUsers
+	res.Body.ListQuery = dto.ListQueryRes{
+		Page: params.Page, PerPage: params.PerPage, SortBy: params.SortBy, SortDir: params.SortDir, Search: params.Search, Includes: params.Includes, Filters: filters,
+	}
 	return res, nil
 }
 

@@ -73,7 +73,7 @@ type ListUsersReq struct {
 type ListUsersResBody struct {
 	Users     []UserModelRes `json:"users"`
 	Total     int            `json:"total"`
-	ListQuery ListQuery      `json:"query"`
+	ListQuery ListQueryRes   `json:"query"`
 }
 
 type ListUsersRes struct {

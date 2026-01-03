@@ -22,6 +22,16 @@ type ListQuery struct {
 	Includes string `query:"includes" json:"includes" doc:"Includes in JSON" default:"{}"`
 }
 
+type ListQueryRes struct {
+	Page     int      ` json:"page" doc:"Page number, starting from 1" default:"1" minimum:"1"`
+	PerPage  int      ` json:"per_page" doc:"Number of items per page" default:"10" minimum:"1" maximum:"200"`
+	SortBy   string   ` json:"sort_by" doc:"Sort by field" default:"created_at"`
+	SortDir  string   ` json:"sort_dir" doc:"Sort direction, either 'asc' or 'desc'" enum:"asc,desc" default:"desc"`
+	Filters  []Filter ` json:"filters" doc:"Filters in JSON" default:"[]"`
+	Search   string   ` json:"search" doc:"Search query" default:""`
+	Includes string   ` json:"includes" doc:"Includes in JSON" default:"{}"`
+}
+
 type AuthHeader struct {
 	Authorization string `header:"Authorization" doc:"Bearer Token of the user" required:"true"`
 }

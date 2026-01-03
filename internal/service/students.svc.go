@@ -29,7 +29,7 @@ func (s *StudentsService) GetStudents(ctx context.Context, params *dto.ListStude
 	res := &dto.ListStudentsRes{
 		Body: dto.ListStudentsResBody{
 			Total:     0,
-			ListQuery: params.ListQuery,
+			ListQuery: dto.ListQueryRes{},
 			Students:  nil,
 		},
 	}
@@ -68,6 +68,9 @@ func (s *StudentsService) GetStudents(ctx context.Context, params *dto.ListStude
 	for _, st := range students {
 		newStudent := *s.ModelToRes(&st)
 		resStudents = append(resStudents, newStudent)
+	}
+	res.Body.ListQuery = dto.ListQueryRes{
+		Page: params.Page, PerPage: params.PerPage, SortBy: params.SortBy, SortDir: params.SortDir, Search: params.Search, Includes: params.Includes, Filters: filters,
 	}
 	res.Body.Students = resStudents
 	return res, nil
